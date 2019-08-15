@@ -2,20 +2,17 @@ import requests
 import json
 import datetime
 
-url_base = "http://192.168.0.249/"
+url_base = "http://localhost/"
 
 data = {"auth":
-            {"scope":
-                 {"project":
-                      {"id": "c954f74f35c54f78ba2c5f879703b454"}
-                  },
+            {
              "identity":
                  {"password":
                       {"user":
                            {"domain":
                                 {"name": "Default"},
                             "password": "devstack",
-                            "name": "admin"
+                            "name": "demo"
                             }
                        },
                   "methods": ["password"]
@@ -26,9 +23,17 @@ data = {"auth":
 server_uuid = []
 server_names = []
 
+def get_projectID():
+    url = url_base + "identity/v3/auth/projects"
+    headers = {'Content-Type': 'application/json', 'X-Auth-Token': token}
+    res = requests.get(url, headers=headers)
+    print(res.__dict__)
+    body = res.json()
+    projects = [ x['id'] for x in body['projects'] if not x['name'] == "invisible_to_admin"]
+    print(projects)
 
+# for ask what kinds of instances admin control on dashboard
 def get_server_list():
-
     global server_uuid
     global server_names
 
@@ -36,8 +41,11 @@ def get_server_list():
     headers = {'Content-Type': 'application/json', 'X-Auth-Token': token}
     res = requests.get(url, headers=headers)
     body = res.json()
+
+
     server_uuid = [ x['id'] for x in body['servers']]
     server_names = [ x['name'] for x in body['servers']]
+
     return body
 
 def get_token():
@@ -46,6 +54,7 @@ def get_token():
     # TODO get project id
     res = requests.post(url_base + 'identity/v3/auth/tokens', headers=headers, data=json.dumps(data), verify=True)
     token = res.headers['X-Subject-Token']
+    print(res.__dict__)
     return token
 
 def get_resource_list(instance_uuid, token):
@@ -82,8 +91,9 @@ def get_mesuare_list(body):
 if __name__ == '__main__':
     token = get_token()
     print(token)
-    get_server_list()
-    print(server_names)
-    print(server_uuid)
-    body = get_resource_list('4a38f7cc-b275-4e73-8ec4-871abf957377',token)
-    get_mesuare_list(body)
+    get_projectID()
+    # get_server_list()
+    # print(server_names)
+    # print(server_uuid)
+    # body = get_resource_list('4a38f7cc-b275-4e73-8ec4-871abf957377',token)
+    # get_mesuare_list(body)
