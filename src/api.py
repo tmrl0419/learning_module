@@ -86,6 +86,7 @@ def get_resource_list(token, instance_uuid):
     headers = {'Content-Type': 'application/json, */*', 'X-Auth-Token':token}
     res = requests.get( url, headers = headers )
     body = res.json()
+    print(body)
     return body
 
 def get_mesuare_list(token, body):
@@ -94,20 +95,27 @@ def get_mesuare_list(token, body):
     five_mins_ago = now - five_mins
     headers = {'Content-Type': 'application/json, */*', 'X-Auth-Token': token}
     PARAMS = {'start': None, 'granularity': None, 'resample': None, 'stop': None, 'aggregation': None, 'refresh': False}
-    cpu = 'cpu_util'
-    memory = 'memory.usage'
-    disk = 'disk.usage'
-    url = url_base + 'metric/v1/metric/%s/measures'%(body['metrics'][cpu])
-    res = requests.get(url = url, headers = headers, params= PARAMS )
-    cpu = res.json()[-1][2]
 
-    url = url_base + 'metric/v1/metric/%s/measures' % (body['metrics'][memory])
+    url = url_base + 'metric/v1/metric/%s/measures'%(body['metrics']['cpu_util'])
+    res = requests.get(url = url, headers = headers, params= PARAMS )
+    cpu = res.json()[-1][2]/100
+
+    url = url_base + 'metric/v1/metric/%s/measures' % (body['metrics']['memory.usage'])
     res = requests.get(url=url, headers=headers, params=PARAMS)
     memory = res.json()[-1][2]/(1024)
 
-    url = url_base + 'metric/v1/metric/%s/measures' % (body['metrics'][disk])
+    url = url_base + 'metric/v1/metric/%s/measures' % (body['metrics']['memory'])
+    res = requests.get(url=url, headers=headers, params=PARAMS)
+    memory /= res.json()[-1][2]/(1024)
+
+    url = url_base + 'metric/v1/metric/%s/measures' % (body['metrics']['disk.usage'])
     res = requests.get(url=url, headers=headers, params=PARAMS)
     disk = res.json()[-1][2]/(8*1024*1024*1024)
+
+    url = url_base + 'metric/v1/metric/%s/measures' % (body['metrics']['disk.root.size'])
+    res = requests.get(url=url, headers=headers, params=PARAMS)
+    disk /= res.json()[-1][2]
+
     return cpu, memory, disk
 
 #'''openstack metric show'''
@@ -129,5 +137,4 @@ if __name__ == '__main__':
     token = get_token('admin','devstack')
     get_projectID(token)
     get_server_list(token)
-    print(server_uuid)
     get_server_info(token)

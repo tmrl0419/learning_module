@@ -34,6 +34,7 @@ if __name__ =='__main__':
     token = login('admin','devstack')
     instance_uuid = server_info(token)
     cpu, memory, disk = get_resource_info(token, instance_uuid)
+    print(cpu,memory,disk)
     model = sm.load_model('model/model')
     print("PLEASE INPUT RATING DATA")
     rating = int(input())
